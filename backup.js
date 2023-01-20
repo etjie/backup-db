@@ -24,9 +24,16 @@ const backup = () => {
     smtpFromEmail: process.env.SMTP_FROM,
     smtpDestEmail: process.env.SMTP_TO,
   };
+  console.log(config);
 
   // Backup filename
-  const backupName = `${config.backupName}_${new Date().toISOString()}.sql`;
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  const day = date.getDate().toString().padStart(2, "0");
+  const unixTimestamp = Math.floor(date.getTime() / 1000);
+  const backupName = `${process.env.BACKUP_NAME}_${year}_${month}_${day}_${unixTimestamp}.sql`;
+  console.log(backupName);
 
   // DB Connection details
   let connection;
@@ -64,9 +71,9 @@ const backup = () => {
 
   let query;
   if (config.databaseType === "mysql") {
-    query = "SELECT * FROM your-table-name INTO OUTFILE ?";
+    query = `SELECT * FROM ${config.database} INTO OUTFILE ?`;
   } else if (config.databaseType === "postgresql") {
-    query = "COPY your-table-name TO ?";
+    query = `COPY ${config.database} TO ?`;
   }
 
   connection.query(query, [`/tmp/${backupName}`], (error, results) => {
@@ -86,9 +93,10 @@ const backup = () => {
         console.log(err);
         return;
       }
-
       //delete the local backup file
       require("fs").unlinkSync(`/tmp/${backupName}`);
+
+      console.log("Successfully upload backup to S3");
 
       if (JSON.parse(config.sendEmail)) {
         // Send an email after the backup is completed
@@ -125,5 +133,7 @@ const backup = () => {
     });
   });
 };
+
+backup();
 
 module.exports = backup;
