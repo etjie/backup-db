@@ -75,31 +75,31 @@ const backup = () => {
     secretAccessKey: config.secretKey,
   });
 
-  let query;
-  if (config.databaseType === "mysql") {
-    query = `SELECT * FROM ${config.database} INTO OUTFILE ?`;
-  } else if (config.databaseType === "postgresql") {
-    const file = fs.createWriteStream(`/tmp/${backupName}`);
-
-    const pgDump = spawn("pg_dump", [
-      `--dbname=${config.database}`,
-      `--username=${config.database}`,
-      `--password=${config.database}`,
-      `--format=c`,
-      `--file=${`/tmp/${backupName}`}`,
-    ]);
-
-    pgDump.stdout.pipe(file);
-
-    pgDump.on("close", (code) => {
-      console.log(`pg_dump process exited with code ${code}`);
-    });
-  }
-
   connection.query(query, [`/tmp/${backupName}`], (error, results) => {
     if (error) {
       console.log(error);
       return;
+    }
+
+    let query;
+    if (config.databaseType === "mysql") {
+      query = `SELECT * FROM ${config.database} INTO OUTFILE ?`;
+    } else if (config.databaseType === "postgresql") {
+      const file = fs.createWriteStream(`/tmp/${backupName}`);
+
+      const pgDump = spawn("pg_dump", [
+        `--dbname=${config.database}`,
+        `--username=${config.database}`,
+        `--password=${config.database}`,
+        `--format=c`,
+        `--file=${`/tmp/${backupName}`}`,
+      ]);
+
+      pgDump.stdout.pipe(file);
+
+      pgDump.on("close", (code) => {
+        console.log(`pg_dump process exited with code ${code}`);
+      });
     }
 
     // Upload the backup to S3
