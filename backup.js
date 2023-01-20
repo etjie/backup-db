@@ -99,6 +99,16 @@ const backup = () => {
     `--file=${`/tmp/${backupName}`}`,
   ]);
 
+  console.log([
+    `--host=${config.host}`,
+    `--port=${config.port}`,
+    `--dbname=${config.database}`,
+    `--username=${config.database}`,
+    `--password=${config.database}`,
+    `--format=c`,
+    `--file=${`/tmp/${backupName}`}`,
+  ]);
+
   pgDump.on("error", (err) => {
     console.error(`pg_dump process error: ${err}`);
   });
