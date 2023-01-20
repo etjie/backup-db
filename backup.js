@@ -105,68 +105,67 @@ const backup = () => {
 
   pgDump.stdout.pipe(file);
 
-  pgDump.on("close", (code) => {
-    console.log(`pg_dump process exited with code ${code}`);
-    console.log("pg_dump process completed!");
-  });
+  //   pgDump.on("close", (code) => {
+  //     console.log(`pg_dump process completed with code ${code}`);
+  //   });
 
   pgDump.on("exit", (code) => {
-    console.log(`pg_dump process completed with code ${code}`);
+    console.log(`pg_dump process exited with code ${code}`);
+    // Upload the backup to S3
+    const uploadParams = {
+      Bucket: bucketName,
+      Key: `backups/${backupName}`,
+      Body: require("fs").createReadStream(`/tmp/${backupName}`),
+    };
+    console.info(uploadParams);
+
+    s3.upload(uploadParams, (err, data) => {
+      if (err) {
+        console.log(err);
+        return;
+      }
+
+      //delete the local backup file
+      // require("fs").unlinkSync(`/tmp/${backupName}`);
+
+      console.log("Successfully upload backup to S3");
+
+      if (JSON.parse(config.sendEmail)) {
+        // Send an email after the backup is completed
+        var transporter = nodemailer.createTransport({
+          host: config.smtpHost,
+          port: config.smtpPort,
+          secure: true,
+          auth: {
+            user: config.smtpEmail,
+            pass: config.smtpEmailPass,
+          },
+        });
+        var mailOptions = {
+          from: config.smtpFromEmail,
+          to: config.smtpDestEmail,
+          subject: "Backup complete",
+          text: "The backup process has been completed successfully",
+          attachments: [{ path: `/tmp/${backupName}` }],
+        };
+        transporter.sendMail(mailOptions, function (error, info) {
+          if (error) {
+            console.log(error);
+          } else {
+            console.log("Email sent: " + info.response);
+          }
+        });
+      }
+
+      if (config.databaseType === "postgresql") {
+        connection.end();
+      }
+
+      console.log("Backup completed successfully");
+    });
   });
   // }
 
-  // Upload the backup to S3
-  const uploadParams = {
-    Bucket: bucketName,
-    Key: `backups/${backupName}`,
-    Body: require("fs").createReadStream(`/tmp/${backupName}`),
-  };
-  console.info(uploadParams);
-
-  s3.upload(uploadParams, (err, data) => {
-    if (err) {
-      console.log(err);
-      return;
-    }
-
-    //delete the local backup file
-    // require("fs").unlinkSync(`/tmp/${backupName}`);
-
-    console.log("Successfully upload backup to S3");
-
-    if (JSON.parse(config.sendEmail)) {
-      // Send an email after the backup is completed
-      var transporter = nodemailer.createTransport({
-        host: config.smtpHost,
-        port: config.smtpPort,
-        secure: true,
-        auth: {
-          user: config.smtpEmail,
-          pass: config.smtpEmailPass,
-        },
-      });
-      var mailOptions = {
-        from: config.smtpFromEmail,
-        to: config.smtpDestEmail,
-        subject: "Backup complete",
-        text: "The backup process has been completed successfully",
-        attachments: [{ path: `/tmp/${backupName}` }],
-      };
-      transporter.sendMail(mailOptions, function (error, info) {
-        if (error) {
-          console.log(error);
-        } else {
-          console.log("Email sent: " + info.response);
-        }
-      });
-    }
-
-    if (config.databaseType === "postgresql") {
-      connection.end();
-    }
-
-    console.log("Backup completed successfully");
-  });
   // };
 };
 
