@@ -90,8 +90,8 @@ const backup = () => {
 
   console.log("Starting pg_dump process...");
   const pgDump = spawn("pg_dump", [
-    `--host=${config.host}`,
-    `--port=${config.port}`,
+    // `--host=${config.host}`,
+    // `--port=${config.port}`,
     `--dbname=${config.database}`,
     `--username=${config.user}`,
     `--password=${config.password}`,
