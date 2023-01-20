@@ -3,6 +3,8 @@ const mysql = require("mysql2");
 const { Client } = require("pg");
 const AWS = require("aws-sdk");
 const nodemailer = require("nodemailer");
+const { spawn } = require("child_process");
+const fs = require("fs");
 
 const backup = () => {
   const config = {
@@ -77,9 +79,22 @@ const backup = () => {
   if (config.databaseType === "mysql") {
     query = `SELECT * FROM ${config.database} INTO OUTFILE ?`;
   } else if (config.databaseType === "postgresql") {
-    query = `COPY ${config.database} TO ?`;
+    const file = fs.createWriteStream(`/tmp/${backupName}`);
+
+    const pgDump = spawn("pg_dump", [
+      `--dbname=${config.database}`,
+      `--username=${config.database}`,
+      `--password=${config.database}`,
+      `--format=c`,
+      `--file=${`/tmp/${backupName}`}`,
+    ]);
+
+    pgDump.stdout.pipe(file);
+
+    pgDump.on("close", (code) => {
+      console.log(`pg_dump process exited with code ${code}`);
+    });
   }
-  console.info(query);
 
   connection.query(query, [`/tmp/${backupName}`], (error, results) => {
     if (error) {
