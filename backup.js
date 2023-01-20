@@ -68,6 +68,10 @@ const backup = () => {
   });
   const s3 = new AWS.S3();
   const bucketName = config.bucketName;
+  console.info({
+    accessKeyId: config.accessKey,
+    secretAccessKey: config.secretKey,
+  });
 
   let query;
   if (config.databaseType === "mysql") {
@@ -75,6 +79,7 @@ const backup = () => {
   } else if (config.databaseType === "postgresql") {
     query = `COPY ${config.database} TO ?`;
   }
+  console.info(query);
 
   connection.query(query, [`/tmp/${backupName}`], (error, results) => {
     if (error) {
@@ -88,6 +93,8 @@ const backup = () => {
       Key: `backups/${backupName}`,
       Body: require("fs").createReadStream(`/tmp/${backupName}`),
     };
+    console.info(uploadParams);
+
     s3.upload(uploadParams, (err, data) => {
       if (err) {
         console.log(err);
