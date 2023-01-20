@@ -75,16 +75,16 @@ const backup = () => {
     secretAccessKey: config.secretKey,
   });
 
-  connection.query(query, [`/tmp/${backupName}`], (error, results) => {
-    if (error) {
-      console.log(error);
-      return;
-    }
+//   connection.query(query, [`/tmp/${backupName}`], (error, results) => {
+//     if (error) {
+//       console.log(error);
+//       return;
+//     }
 
-    let query;
-    if (config.databaseType === "mysql") {
-      query = `SELECT * FROM ${config.database} INTO OUTFILE ?`;
-    } else if (config.databaseType === "postgresql") {
+    // let query;
+    // if (config.databaseType === "mysql") {
+    //   query = `SELECT * FROM ${config.database} INTO OUTFILE ?`;
+    // } else if (config.databaseType === "postgresql") {
       const file = fs.createWriteStream(`/tmp/${backupName}`);
       console.info(`create temp /tmp/${backupName}`);
 
@@ -101,7 +101,7 @@ const backup = () => {
       pgDump.on("close", (code) => {
         console.log(`pg_dump process exited with code ${code}`);
       });
-    }
+    // }
 
     // Upload the backup to S3
     const uploadParams = {
@@ -154,8 +154,7 @@ const backup = () => {
 
       console.log("Backup completed successfully");
     });
-  });
-};
+// };
 
 backup();
 
