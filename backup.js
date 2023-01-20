@@ -88,7 +88,10 @@ const backup = () => {
   const file = fs.createWriteStream(`/tmp/${backupName}`);
   console.info(`create temp /tmp/${backupName}`);
 
+  console.log("Starting pg_dump process...");
   const pgDump = spawn("pg_dump", [
+    `--host=${config.host}`,
+    `--port=${config.port}`,
     `--dbname=${config.database}`,
     `--username=${config.database}`,
     `--password=${config.database}`,
@@ -96,10 +99,19 @@ const backup = () => {
     `--file=${`/tmp/${backupName}`}`,
   ]);
 
+  pgDump.on("error", (err) => {
+    console.error(`pg_dump process error: ${err}`);
+  });
+
   pgDump.stdout.pipe(file);
 
   pgDump.on("close", (code) => {
     console.log(`pg_dump process exited with code ${code}`);
+    console.log("pg_dump process completed!");
+  });
+
+  pgDump.on("exit", (code) => {
+    console.log(`pg_dump process completed with code ${code}`);
   });
   // }
 
@@ -116,8 +128,9 @@ const backup = () => {
       console.log(err);
       return;
     }
+
     //delete the local backup file
-    require("fs").unlinkSync(`/tmp/${backupName}`);
+    // require("fs").unlinkSync(`/tmp/${backupName}`);
 
     console.log("Successfully upload backup to S3");
 
