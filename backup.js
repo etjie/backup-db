@@ -93,8 +93,8 @@ const backup = () => {
     `--host=${config.host}`,
     `--port=${config.port}`,
     `--dbname=${config.database}`,
-    `--username=${config.database}`,
-    `--password=${config.database}`,
+    `--username=${config.user}`,
+    `--password=${config.password}`,
     `--format=c`,
     `--file=${`/tmp/${backupName}`}`,
   ]);
@@ -103,8 +103,8 @@ const backup = () => {
     `--host=${config.host}`,
     `--port=${config.port}`,
     `--dbname=${config.database}`,
-    `--username=${config.database}`,
-    `--password=${config.database}`,
+    `--username=${config.user}`,
+    `--password=${config.password}`,
     `--format=c`,
     `--file=${`/tmp/${backupName}`}`,
   ]);
