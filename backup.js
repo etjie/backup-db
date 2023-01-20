@@ -86,6 +86,7 @@ const backup = () => {
       query = `SELECT * FROM ${config.database} INTO OUTFILE ?`;
     } else if (config.databaseType === "postgresql") {
       const file = fs.createWriteStream(`/tmp/${backupName}`);
+      console.info(`create temp /tmp/${backupName}`);
 
       const pgDump = spawn("pg_dump", [
         `--dbname=${config.database}`,
